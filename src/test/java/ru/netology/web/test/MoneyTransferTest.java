@@ -22,7 +22,28 @@ class MoneyTransferTest {
         verificationPage.validVerify(verificationCode);
     }
     
-
+ @AfterEach
+    void returnBalance() {
+        open("http://localhost:9999");
+        var loginPage = new LoginPage();
+        var authInfo = DataHelper.getAuthInfo();
+        var verificationPage = loginPage.validLogin(authInfo);
+        var verificationCode = DataHelper.getVerificationCodeFor(authInfo);
+        verificationPage.validVerify(verificationCode);
+        var dashboardPage = new DashboardPage();
+        var firstCardBalance = dashboardPage.getCardBalance(DataHelper.getFirstCard().getId());
+        var secondCardBalance = dashboardPage.getCardBalance(DataHelper.getSecondCard().getId());
+        if (firstCardBalance > secondCardBalance) {
+            dashboardPage.addMoneySecondCardClick();
+            var depositPage = new DepositPage();
+            depositPage.transferCardToCard(String.valueOf((firstCardBalance - secondCardBalance) / 2), DataHelper.getFirstCard());
+        } else if (firstCardBalance < secondCardBalance) {
+            dashboardPage.addMoneyFirstCardClick();
+            var depositPage = new DepositPage();
+            depositPage.transferCardToCard(String.valueOf((secondCardBalance - firstCardBalance) / 2), DataHelper.getSecondCard());
+        }
+    }
+    
     @Test
     void shouldTransferMoneyFromFirstToSecondCard() {
         var dashboardPage = new DashboardPage();
